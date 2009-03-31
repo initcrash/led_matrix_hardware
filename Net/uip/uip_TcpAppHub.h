@@ -30,7 +30,6 @@
 #define UIP_TCPAPPHUB_H_
 
 #include <stdint.h>
-#include "../TcpApps/HttpD.h"
 #include "../TcpApps/lms.h"
 
 void uip_TcpAppHubCall(void);
@@ -41,7 +40,6 @@ void uip_TcpAppHubInit(void);
 
 typedef union 
 {
-	struct tHttpD HttpDSocket;
 	struct tLMS LMSSocket;
 	//struct tFtp FtpSocket;
 	//...
