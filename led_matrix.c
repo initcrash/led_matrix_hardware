@@ -44,24 +44,17 @@
 /* Arrays für Rot und Gruen
  * Ein uint16_t pro Zeile pro Modul
  */
-static uint16_t MODULE_RED[2*4*16];
-static uint16_t MODULE_GREEN[2*4*16];
+static uint16_t BUFFERS[2*2*4*16];
 
-static uint16_t *frontbuffer_red;
-uint16_t *backbuffer_red;
-static uint16_t *frontbuffer_green;
-uint16_t *backbuffer_green;
+static uint16_t *frontbuffer;
+uint16_t *backbuffer;
 
 void swap_buffers(void)
 {
 	uint16_t *tmp;
-	tmp = backbuffer_red;
-	backbuffer_red = frontbuffer_red;
-	frontbuffer_red = tmp;
-
-	tmp = backbuffer_green;
-	backbuffer_green = frontbuffer_green;
-	frontbuffer_green = tmp;
+	tmp = backbuffer;
+	backbuffer = frontbuffer;
+	frontbuffer = tmp;
 }
 
 void led_update(void)
@@ -72,8 +65,7 @@ void led_update(void)
 	LED_CONTROL_PORT |= (1<<LED_RESET);
 	LED_CONTROL_PORT &= ~(1<<LED_RESET);
 
-	uint16_t *red_ptr = frontbuffer_red;
-	uint16_t *green_ptr = frontbuffer_green;
+	uint16_t *buf_ptr = frontbuffer;
 	for(i=0;i<4;i++)
 	{
 		LED_SELECT_PORT |= (1<<i);
@@ -83,19 +75,18 @@ void led_update(void)
 	//		LED_CONTROL_PORT |=  (1<<LED_BRIGHT);
 			for(counter = 0; counter < 16; counter++)
 			{
-				if((*red_ptr>>counter)&1)
+				if((*buf_ptr>>counter)&1)
 					LED_CONTROL_PORT |= (1<<LED_RED);
 				else
 					LED_CONTROL_PORT &= ~(1<<LED_RED);
-				if((*green_ptr>>counter)&1)
+				if((*(buf_ptr+16*4)>>counter)&1)
 					LED_CONTROL_PORT |= (1<<LED_GREEN);
 				else
 					LED_CONTROL_PORT &= ~(1<<LED_GREEN);
 				LED_CONTROL_PORT |= (1<<LED_CLOCK);
 				LED_CONTROL_PORT &= ~(1<<LED_CLOCK);
 			}
-			red_ptr++;
-			green_ptr++;
+			buf_ptr++;
 	//		LED_CONTROL_PORT &= ~(1<<LED_BRIGHT);
 		}
 		LED_SELECT_PORT &= ~(1<<i);
@@ -105,13 +96,10 @@ void led_update(void)
 void led_init(void)
 {
 	/* Array initialisieren */
-	memset(MODULE_RED,0,sizeof(MODULE_RED));
-	memset(MODULE_GREEN,0,sizeof(MODULE_GREEN));
+	memset(BUFFERS,0,sizeof(BUFFERS));
 
-	frontbuffer_red = MODULE_RED;
-	frontbuffer_green = MODULE_GREEN;
-	backbuffer_red = MODULE_RED + (16 * 4);
-	backbuffer_green = MODULE_GREEN + (16 * 4);
+	frontbuffer = BUFFERS;
+	backbuffer = BUFFERS + (2 * 16 * 4);
 
 	LED_SELECT_DDRD |= (1<<LED_SELECT_1) | 
 		(1<<LED_SELECT_2) | 

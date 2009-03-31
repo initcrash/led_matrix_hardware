@@ -31,7 +31,6 @@ extern void led_runner(void);
 extern void led_init(void);
 extern void swap_buffers(void);
 
-extern uint16_t *backbuffer_red;
-extern uint16_t *backbuffer_green;
+extern uint16_t *backbuffer;
 
 #endif

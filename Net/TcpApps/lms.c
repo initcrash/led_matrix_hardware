@@ -36,37 +36,20 @@ void LMSCall(	uint8_t* pBuffer,
 				struct tLMS* pSocket)
 {
 	uint16_t counter;
-	static uint16_t *led_ptr;
 
 	/* wird nur direkt nach connect ausgefuehrt */
 	if(uip_connected())
 	{
 		pSocket->byte_counter = 0;
-		led_ptr = backbuffer_red;
-		pSocket->toggler = 0;
 	}
 	else if(uip_newdata() || uip_acked())
 	{
 		for(counter=0;counter < nBytes; counter++)
 		{
-			if(!pSocket->toggler)
-			{
-				*led_ptr = *pBuffer++;
-				pSocket->toggler = 1;
-			}
-			else
-			{
-				*led_ptr |= (*pBuffer++<<8) & 0xFF00;
-				led_ptr++;
-				pSocket->toggler = 0;
-			}
-			if(++pSocket->byte_counter == 128)
-				led_ptr = backbuffer_green;
-			else if(pSocket->byte_counter == 256)
+			*(((uint8_t*)backbuffer)+(pSocket->byte_counter++)) = *pBuffer++;
+			if(pSocket->byte_counter == 256)
 			{
 				swap_buffers();
-//				uip_close();
-				led_ptr = backbuffer_red;
 				pSocket->byte_counter = 0;
 			}
 		}
