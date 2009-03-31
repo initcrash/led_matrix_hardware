@@ -44,16 +44,24 @@
 /* Arrays für Rot und Gruen
  * Ein uint16_t pro Zeile pro Modul
  */
-static uint16_t MODULE_RED[4][16];
-static uint16_t MODULE_GREEN[4][16];
+static uint16_t MODULE_RED[2*4*16];
+static uint16_t MODULE_GREEN[2*4*16];
 
-uint16_t MODULE_RED_TEMP[4][16];
-uint16_t MODULE_GREEN_TEMP[4][16];
+static uint16_t *frontbuffer_red;
+uint16_t *backbuffer_red;
+static uint16_t *frontbuffer_green;
+uint16_t *backbuffer_green;
 
-void led_copy_data(void)
+void swap_buffers(void)
 {
-	memcpy(&MODULE_RED, &MODULE_RED_TEMP, sizeof(MODULE_RED_TEMP));
-	memcpy(&MODULE_GREEN, &MODULE_GREEN_TEMP, sizeof(MODULE_GREEN_TEMP));
+	uint16_t *tmp;
+	tmp = backbuffer_red;
+	backbuffer_red = frontbuffer_red;
+	frontbuffer_red = tmp;
+
+	tmp = backbuffer_green;
+	backbuffer_green = frontbuffer_green;
+	frontbuffer_green = tmp;
 }
 
 void led_update(void)
@@ -64,6 +72,8 @@ void led_update(void)
 	LED_CONTROL_PORT |= (1<<LED_RESET);
 	LED_CONTROL_PORT &= ~(1<<LED_RESET);
 
+	uint16_t *red_ptr = frontbuffer_red;
+	uint16_t *green_ptr = frontbuffer_green;
 	for(i=0;i<4;i++)
 	{
 		LED_SELECT_PORT |= (1<<i);
@@ -73,17 +83,19 @@ void led_update(void)
 	//		LED_CONTROL_PORT |=  (1<<LED_BRIGHT);
 			for(counter = 0; counter < 16; counter++)
 			{
-				if((MODULE_RED[i][counter2]>>counter)&1)
+				if((*red_ptr>>counter)&1)
 					LED_CONTROL_PORT |= (1<<LED_RED);
 				else
 					LED_CONTROL_PORT &= ~(1<<LED_RED);
-				if((MODULE_GREEN[i][counter2]>>counter)&1)
+				if((*green_ptr>>counter)&1)
 					LED_CONTROL_PORT |= (1<<LED_GREEN);
 				else
 					LED_CONTROL_PORT &= ~(1<<LED_GREEN);
 				LED_CONTROL_PORT |= (1<<LED_CLOCK);
 				LED_CONTROL_PORT &= ~(1<<LED_CLOCK);
 			}
+			red_ptr++;
+			green_ptr++;
 	//		LED_CONTROL_PORT &= ~(1<<LED_BRIGHT);
 		}
 		LED_SELECT_PORT &= ~(1<<i);
@@ -93,11 +105,13 @@ void led_update(void)
 void led_init(void)
 {
 	/* Array initialisieren */
-	memset(&MODULE_RED,0,sizeof(MODULE_RED));
-	memset(&MODULE_RED,0,sizeof(MODULE_GREEN));
-	
-	memset(&MODULE_RED,0,sizeof(MODULE_RED_TEMP));
-	memset(&MODULE_RED,0,sizeof(MODULE_GREEN_TEMP));
+	memset(MODULE_RED,0,sizeof(MODULE_RED));
+	memset(MODULE_GREEN,0,sizeof(MODULE_GREEN));
+
+	frontbuffer_red = MODULE_RED;
+	frontbuffer_green = MODULE_GREEN;
+	backbuffer_red = MODULE_RED + (16 * 4);
+	backbuffer_green = MODULE_GREEN + (16 * 4);
 
 	LED_SELECT_DDRD |= (1<<LED_SELECT_1) | 
 		(1<<LED_SELECT_2) | 

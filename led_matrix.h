@@ -29,9 +29,9 @@
 extern void led_update(void);
 extern void led_runner(void);
 extern void led_init(void);
-extern void led_copy_data(void);
+extern void swap_buffers(void);
 
-extern uint16_t MODULE_RED_TEMP[4][16];
-extern uint16_t MODULE_GREEN_TEMP[4][16];
+extern uint16_t *backbuffer_red;
+extern uint16_t *backbuffer_green;
 
 #endif
